@@ -1,6 +1,50 @@
 import lxml.etree as ET
 from typing import List
 import sys
+from enum import Enum
+
+class Occurs(Enum):
+    warning=-2
+    nothing=-1
+    empty=0
+    optionalSingle=1
+    mandatorySingle=2
+    optionalArrayLimited=3
+    mandatoryArrayLimited=4
+    optionalArrayUnlimited=5
+    mandatoryArrayUnlimited=6
+
+    def __str__(self):
+        return f"{self.name}"
+
+def get_occurs(element:ET.Element) -> Occurs:
+    minOccurs:str = element.get('minOccurs', '')
+    maxOccurs:str = element.get('maxOccurs', '')
+
+    if minOccurs == '' and maxOccurs == '':
+        return Occurs.nothing
+    
+    if minOccurs.isdigit() and maxOccurs.isdigit():
+        if minOccurs == 0 and maxOccurs == 0:
+            return Occurs.empty
+        if minOccurs == 0 and maxOccurs == 1:
+            return Occurs.optionalSingle
+        if minOccurs == 1 and maxOccurs == 1:
+            return Occurs.mandatorySingle
+        if minOccurs == 0 and maxOccurs > 1:
+            return Occurs.optionalArrayLimited
+        if minOccurs == 1 and maxOccurs > 1:
+            return Occurs.mandatoryArrayLimited
+        
+    if minOccurs.isdigit() and not maxOccurs.isdigit():
+        if maxOccurs == 'unbound':
+            if minOccurs == 0:
+                return Occurs.optionalArrayUnlimited
+            if minOccurs == 1:
+                return Occurs.mandatoryArrayUnlimited
+        else:
+            return Occurs.warning
+
 
 def generate_xpaths_from_xsd(file_path: str, root_element: str) -> List[str]:
     
@@ -42,6 +86,12 @@ def generate_xpaths_from_xsd(file_path: str, root_element: str) -> List[str]:
                 custom_type = custom_complex_type
                 
             if custom_type is not None:
+                occursElement: Occurs = get_occurs(element)
+                if occursElement is not None:
+                    if occursElement.value >= Occurs.optionalArrayLimited.value:
+                        minOccurs:str = element.get('minOccurs', '')
+                        maxOccurs:str = 'x' if element.get('maxOccurs', '') == 'unbound' else element.get('maxOccurs', '')
+                        current_path = f"{current_path}[{minOccurs,{maxOccurs}}]"
                 get_xpath(custom_type, current_path)
             else:
                 restriction: ET.Element = element.find('xs:restriction', namespaces=ns_map)
