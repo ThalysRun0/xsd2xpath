@@ -17,6 +17,7 @@ source xsd2xpath/bin/activate
 xsd2xpath/Scripts/activate
 
 python -m pip install --upgrade pip
+pip install argparse
 pip install lxml
 
 ``` 
@@ -25,11 +26,11 @@ now you are ready to get some xpath produced
 
 The python script managed 2 arguments  
 - file_path : is a valid path to XSD file
-- root_element : is a point in the XML hyerarchy from wich you want to get xpath   
+- root_element : is a point in the XML hyerarchy from wich you want to begin the exploration  
 
 call the python script with :  
 ```bash
-python xsd2xpath.py <file_path> <root_element>
+python xsd2xpath.py --xsd <file_path> [--root <root_element>:Document]
 ```
 
 This will produce in stdOut the list of xpath that can be defines within the XSD syntax  

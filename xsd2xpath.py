@@ -119,8 +119,23 @@ def generate_xpaths_from_xsd(file_path: str, root_element: str) -> List[str]:
         print(f"Error unmanaged : {e}")
         return []
     
-if __name__ == "__main__":
-    print(sys.argv)
-    for xpath in generate_xpaths_from_xsd(sys.argv[1], sys.argv[2]):
+def main(args=None):
+    import argparse
+    parser = argparse.ArgumentParser(prog=__name__,
+                                     description='Parses an XSD file to produce a list of XPATH '
+                                                 'resulting from the schema xmlns definition ')
+    parser.add_argument('--xsd', type=str,
+                        help='the XSD filepath from which is generated the XPATHs ')
+    parser.add_argument('--root', type=str, default='Document',
+                        help='the root element from which is explored the XSD '
+                             'It might not be clear, if the same element name is used at multiple points in the hierarchy ')
+    options:any = parser.parse_args(args)
+
+    for xpath in generate_xpaths_from_xsd(options.xsd, options.root):
         print(xpath)
         
+
+
+if __name__ == "__main__":
+    print(sys.argv)
+    main()
